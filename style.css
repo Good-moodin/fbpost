@@ -18,3 +18,21 @@
 #preview_url {
 	display: block;
 }
+.fb-login-button {
+  margin-bottom: 20px;
+}
+
+#pages {
+  display: none;
+  margin-bottom: 20px;
+}
+
+#post-form {
+  display: none;
+  margin-bottom: 20px;
+}
+
+#post-preview {
+  display: none;
+  margin-bottom: 20px;
+}

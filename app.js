@@ -3,7 +3,7 @@ $(document).ready(function(){
 // Initialize Facebook SDK
 window.fbAsyncInit = function() {
     FB.init({
-      appId      : '117689704559157',
+      appId      : '2589168794565117',
       cookie     : true,
       xfbml      : true,
       version    : 'v11.0'

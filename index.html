@@ -3,35 +3,182 @@
 <head>
 	<title>Post to Facebook Page</title>
 	<link rel="stylesheet" type="text/css" href="style.css">
+  <style>
+    .container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+h1 {
+  text-align: center;
+}
+
+#login-button,
+#page-select {
+  display: none;
+}
+
+form {
+  display: none;
+  margin-top: 20px;
+}
+
+textarea {
+  width: 100%;
+  height: 100px;
+  resize: none;
+  margin-bottom: 10px;
+}
+
+button {
+  display: block;
+  margin: 0 auto;
+}
+
+  </style>
 </head>
 <body>
-	<!-- Login button -->
-<div class="fb-login-button" data-size="large" data-button-type="login_with" data-layout="default" data-auto-logout-link="false" data-use-continue-as="false" data-width=""></div>
+    <div class="container">
+        <h1>Facebook Page Post</h1>
+        <div id="login-button"></div>
+        <div id="page-select"></div>
+        <form id="post-form">
+            <textarea id="post-content" name="post-content" placeholder="What's on your mind?"></textarea>
+            <input type="file" id="post-image" name="post-image">
+            <button type="submit">Post</button>
+        </form>
+    </div>
+    <script src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v16.0&appId=YOUR_APP_ID&autoLogAppEvents=1" async defer></script>
+    <script src="app.js"></script>
 
-<!-- Page selection dropdown -->
-<select id="pages"></select>
 
-<!-- Post form -->
-<form id="post-form">
-  <label for="message">Message:</label>
-  <input type="text" name="message" required>
-
-  <label for="url">URL:</label>
-  <input type="url" name="url" required>
-
-  <label for="image">Image:</label>
-  <input type="file" name="image" accept="image/*" required>
-
-  <button type="submit">Preview</button>
-  <button type="button" id="publish-btn" disabled>Publish</button>
-</form>
-
-<!-- Post preview -->
-<div id="post-preview"></div>
 
 
 	<script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script src="//connect.facebook.net/en_US/sdk.js"></script>
-	<script src="app.js"></script>
+	<script >
+    window.fbAsyncInit = function() {
+  // Initialize the Facebook JS SDK
+  FB.init({
+    appId      : '2589168794565117',
+    cookie     : true,
+    xfbml      : true,
+    version    : 'v16.0'
+  });
+    
+  // Check if the user is already logged in
+  FB.getLoginStatus(function(response) {
+    if (response.status === 'connected') {
+      // The user is logged in and has authenticated your app,
+      // so display the page selection and post form
+      showPageSelect();
+      showPostForm();
+    } else {
+      // Display the login button
+      showLoginButton();
+    }
+  });
+};
+
+// Load the Facebook JS SDK asynchronously
+(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "https://connect.facebook.net/en_US/sdk.js";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));
+
+function showLoginButton() {
+  // Display the login button
+  document.getElementById('login-button').innerHTML = '<div class="fb-login-button" data-size="large" data-onlogin="onFacebookLogin"></div>';
+  document.getElementById('login-button').style.display = 'block';
+}
+
+function onFacebookLogin() {
+  // Check for successful login
+  FB.getLoginStatus(function(response) {
+    if (response.status === 'connected') {
+      // The user is logged in and has authenticated your app,
+      // so display the page selection and post form
+      showPageSelect();
+      showPostForm();
+    } else {
+      // Handle unsuccessful login
+      alert('Unable to log in with Facebook. Please try again.');
+    }
+  });
+}
+
+function showPageSelect() {
+  // Fetch the list of pages the user manages or is an admin of
+  FB.api('/me/accounts', function(response) {
+    // Create a select element with the list of pages
+    var optionsHtml = '';
+    for (var i = 0; i < response.data.length; i++) {
+      var pageData = response.data[i];
+      optionsHtml += '<option value="' + pageData.id + '">' + pageData.name + '</option>';
+    }
+    var pageSelectHtml = '<label for="page-select">Select a page:</label><select id="page-select">' + optionsHtml + '</select>';
+    document.getElementById('page-select').innerHTML = pageSelectHtml;
+    document.getElementById('page-select').style.display = 'block';
+  });
+}
+
+function showPostForm() {
+  // Display the post form
+  document.getElementById('post-form').style.display = 'block';
+}
+
+document.getElementById('post-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  //
+    // Get the selected page ID and access token
+var selectedPageId = document.getElementById('page-select').value;
+var selectedPageAccessToken = '';
+FB.api('/' + selectedPageId + '?fields=access_token', function(response) {
+selectedPageAccessToken = response.access_token;
+
+// Prepare the post data
+var postData = {
+  message: document.getElementById('post-content').value,
+  access_token: selectedPageAccessToken
+};
+
+// If an image is selected, upload it and include its URL in the post data
+if (document.getElementById('post-image').files[0]) {
+  var imageFile = document.getElementById('post-image').files[0];
+  var formData = new FormData();
+  formData.append('source', imageFile);
+  FB.api('/' + selectedPageId + '/photos', 'post', { 
+    access_token: selectedPageAccessToken,
+    source: formData,
+    caption: document.getElementById('post-content').value
+  }, function(response) {
+    // Include the image URL in the post data
+    postData.picture = response.id;
+    // Make the post request
+    createPost(selectedPageId, postData);
+  });
+} else {
+  // No image selected, so make the post request
+  createPost(selectedPageId, postData);
+}
+});
+});
+
+function createPost(pageId, postData) {
+// Make a POST request to create a new post on the selected page's feed
+FB.api('/' + pageId + '/feed', 'post', postData, function(response) {
+// Handle the response from the API
+if (!response || response.error) {
+alert('Unable to create post. Please try again.');
+} else {
+alert('Post created successfully!');
+}
+});
+}
+  </script>
 </body>
 </html>

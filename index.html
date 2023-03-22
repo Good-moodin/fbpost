@@ -5,29 +5,30 @@
 	<link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-	<div id="fb-root"></div>
-	<h1>Post to Facebook Page</h1>
-	<div class="container">
-		<p><button id="login">Log In with Facebook</button></p>
-		<p><label for="page_select">Select Page:</label></p>
-		<select id="page_select" disabled>
-			<option value="">Choose a page</option>
-		</select>
-		<p><label for="message">Message:</label></p>
-		<textarea id="message"></textarea>
-		<p><label for="url">URL:</label></p>
-		<input type="text" id="url">
-		<p><label for="image">Image URL:</label></p>
-		<input type="text" id="image">
+	<!-- Login button -->
+<div class="fb-login-button" data-size="large" data-button-type="login_with" data-layout="default" data-auto-logout-link="false" data-use-continue-as="false" data-width=""></div>
 
-		<button id="publish" disabled>Publish</button>
+<!-- Page selection dropdown -->
+<select id="pages"></select>
 
-		<div class="preview">
-			<img src="" alt="Preview Image" id="preview_image">
-			<p id="preview_message"></p>
-			<a href="#" id="preview_url"></a>
-		</div>
-	</div>
+<!-- Post form -->
+<form id="post-form">
+  <label for="message">Message:</label>
+  <input type="text" name="message" required>
+
+  <label for="url">URL:</label>
+  <input type="url" name="url" required>
+
+  <label for="image">Image:</label>
+  <input type="file" name="image" accept="image/*" required>
+
+  <button type="submit">Preview</button>
+  <button type="button" id="publish-btn" disabled>Publish</button>
+</form>
+
+<!-- Post preview -->
+<div id="post-preview"></div>
+
 
 	<script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script src="//connect.facebook.net/en_US/sdk.js"></script>

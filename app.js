@@ -1,105 +1,171 @@
-$(document).ready(function(){
-
-// Initialize Facebook SDK
+// Initialize the Facebook SDK
 window.fbAsyncInit = function() {
-    FB.init({
-      appId      : '2589168794565117',
-      cookie     : true,
-      xfbml      : true,
-      version    : 'v11.0'
-    });
-    
-    // Check login status and update UI accordingly
-    FB.getLoginStatus(function(response) {
-        if (response.status === 'connected') {
-            $('#login').hide();
-            $('#page_select').prop('disabled', false);
-            $('#publish').prop('disabled', false);
+  FB.init({
+    appId: '2589168794565117',
+    cookie: true,
+    xfbml: true,
+    version: 'v12.0'
+  });
 
-            // Get the list of pages the user manages
-            FB.api(
-                '/me/accounts',
-                'GET',
-                {},
-                function(response) {
-                    if (response && !response.error) {
-                        var select = $('#page_select');
-                        select.empty();
-                        for (var i = 0; i < response.data.length; i++) {
-                            var option = $('<option></option>')
-                                .attr('value', response.data[i].id)
-                                .text(response.data[i].name);
-                            select.append(option);
-                        }
-                    }
-                }
-            );
-        } else {
-            $('#page_select').prop('disabled', true);
-            $('#publish').prop('disabled', true);
-        }
-    });
-
-    // Log in with Facebook if not already logged in
-    if (FB.getAccessToken()) {
-        location.reload();
+  // Check if the user is already logged in
+  FB.getLoginStatus(function(response) {
+    if (response.status === 'connected') {
+      onConnected();
     } else {
-        FB.login(function(response) {
-            if (response.authResponse) {
-                location.reload();
-            } else {
-                alert('Error logging in.');
-            }
-        }, {scope: 'manage_pages,pages_show_list'});
+      onNotConnected();
     }
+  });
 };
 
-(function(d, s, id){
-    var js, fjs = d.getElementsByTagName(s)[0];
-    if (d.getElementById(id)) {return;}
-    js = d.createElement(s); js.id = id;
-    js.src = "https://connect.facebook.net/en_US/sdk.js";
-    fjs.parentNode.insertBefore(js, fjs);
+// Load the Facebook SDK asynchronously
+(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "https://connect.facebook.net/en_US/sdk.js";
+  fjs.parentNode.insertBefore(js, fjs);
 }(document, 'script', 'facebook-jssdk'));
+
+// Called when the user is connected
+function onConnected() {
+  console.log('Connected to Facebook.');
+
+  // Get the user's pages
+  FB.api('/me/accounts', function(response) {
+    if (response.error) {
+      console.error(response.error.message);
+      onNotConnected();
+      return;
+    }
+
+    // Populate the page selection dropdown
+    var pagesSelect = document.getElementById('pages');
+    for (var i = 0; i < response.data.length; i++) {
+      var page = response.data[i];
+      var option = document.createElement('option');
+      option.value = page.id;
+      option.text = page.name;
+      pagesSelect.appendChild(option);
+    }
+
+    // Show the page selection dropdown
+    pagesSelect.style.display = 'block';
+  });
+}
+
+// Called when the user is not connected
+function onNotConnected() {
+  console.log('Not connected to Facebook.');
+}
+
+// Called when the user selects a page
+function onPageSelected() {
+  console.log('Page selected.');
+
+  // Show the post form
+  document.getElementById('post-form').style.display = 'block';
+
+  // Enable the publish button
+  document.getElementById('publish-btn').disabled = false;
+}
+
+// Called when the post form is submitted
+function onPostFormSubmitted(event) {
+  event.preventDefault();
+
+  // Get the selected page ID and access token
+  var pagesSelect = document.getElementById('pages');
+  var pageId = pagesSelect.value;
+
+  FB.api('/' + pageId, { fields: 'access_token' }, function(response) {
+    if (response.error) {
+      console.error(response.error.message);
+      return;
+    }
+
+    var accessToken = response.access_token;
+
+    // Get the post data from the form
+    var message = document.getElementsByName('message')[0].value;
+    var url = document.getElementsByName('url')[0].value;
+    var image = document.getElementsByName('image')[0].files[0];
+
+    // Create a new FormData object to send the post data
+    var formData = new FormData();
+    formData.append('access_token', accessToken);
+    formData.append('message', message);
+    formData.append('link', url);
+    formData.append('source', image);
+
+    // Preview the post
+    FB.api('/' + pageId + '/feed_preview', {
+      method: 'POST',
+      body: formData,
+      processData: false,
+      contentType: false
+    }, function(response) {
+      if (response.error) {
+        console.error(response.error.message);
+        return;
+      }
+
+      // Show the post preview
+var previewHtml = response.html;
+  document.getElementById('post-preview').innerHTML = previewHtml;
+  document.getElementById('post-preview').style.display = 'block';
+
+  // Scroll to the post preview
+  document.getElementById('post-preview').scrollIntoView({ behavior: 'smooth' });
 });
+});
+}
 
+// Called when the publish button is clicked
+function onPublishButtonClicked() {
+console.log('Publishing post.');
 
-// Preview post
-$('#message, #url, #image').on('input', function() {
-  var message = $('#message').val();
-  var url = $('#url').val();
-  var image = $('#image').val();
+// Get the selected page ID and access token
+var pagesSelect = document.getElementById('pages');
+var pageId = pagesSelect.value;
 
-  $('#preview_message').text(message);
-  $('#preview_url').attr('href', url).text(url);
-  $('#preview_image').attr('src', image);
+FB.api('/' + pageId, { fields: 'access_token' }, function(response) {
+if (response.error) {
+console.error(response.error.message);
+return;
+}
 
-  if (message || url || image) {
-    $('.preview').show();
-  } else {
-    $('.preview').hide();
+var accessToken = response.access_token;
+
+// Get the post data from the form
+var message = document.getElementsByName('message')[0].value;
+var url = document.getElementsByName('url')[0].value;
+var image = document.getElementsByName('image')[0].files[0];
+
+// Create a new FormData object to send the post data
+var formData = new FormData();
+formData.append('access_token', accessToken);
+formData.append('message', message);
+formData.append('link', url);
+formData.append('source', image);
+
+// Publish the post
+FB.api('/' + pageId + '/feed', {
+  method: 'POST',
+  body: formData,
+  processData: false,
+  contentType: false
+}, function(response) {
+  if (response.error) {
+    console.error(response.error.message);
+    return;
   }
+
+  console.log('Post successfully published.');
 });
-
-// Publish post
-$('#publish').click(function(e) {
-	e.preventDefault();
-
-	var pageId = $('#page_select').val();
-	var message = $('#message').val();
-	var url = $('#url').val();
-	var image = $('#image').val();
-
-	FB.api(
-	    '/' + pageId + '/feed',
-	    'POST',
-	    {'message': message, 'link': url, 'picture': image},
-	    function(response) {
-	        if (response && !response.error) {
-		        alert('Post published successfully!');
-		    } else {
-		    	alert('Error publishing post.');
-		    }
-	    }
-	);
 });
+}
+
+// Attach event listeners
+document.getElementById('pages').addEventListener('change', onPageSelected);
+document.getElementById('post-form').addEventListener('submit', onPostFormSubmitted);
+document.getElementById('publish-btn').addEventListener('click', onPublishButtonClicked);

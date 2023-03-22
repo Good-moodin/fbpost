@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Post to Facebook Page</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+	<div id="fb-root"></div>
+	<h1>Post to Facebook Page</h1>
+	<div class="container">
+		<p><button id="login">Log In with Facebook</button></p>
+		<p><label for="page_select">Select Page:</label></p>
+		<select id="page_select" disabled>
+			<option value="">Choose a page</option>
+		</select>
+		<p><label for="message">Message:</label></p>
+		<textarea id="message"></textarea>
+		<p><label for="url">URL:</label></p>
+		<input type="text" id="url">
+		<p><label for="image">Image URL:</label></p>
+		<input type="text" id="image">
+
+		<button id="publish" disabled>Publish</button>
+
+		<div class="preview">
+			<img src="" alt="Preview Image" id="preview_image">
+			<p id="preview_message"></p>
+			<a href="#" id="preview_url"></a>
+		</div>
+	</div>
+
+	<script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="//connect.facebook.net/en_US/sdk.js"></script>
+	<script src="app.js"></script>
+</body>
+</html>
